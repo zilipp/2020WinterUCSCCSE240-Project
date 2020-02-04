@@ -182,3 +182,37 @@ class Visualization:
         fig.append_trace(trace2, 2, 1)
         fig['layout'].update(height=800, width=800, paper_bgcolor='rgb(233,233,233)', title="Date Plots")
         py.plot(fig, filename='../graphs/date-plots.html', auto_open=False)
+
+    def plot_visit_importance(self):
+        # Page views
+        cnt_srs = self.train_df.groupby('totals.pageviews')['totals.transactionRevenue'].agg(['size', 'count', 'mean'])
+        cnt_srs.columns = ["count", "count of non-zero revenue", "mean"]
+        cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
+        trace1 = horizontal_bar_chart(cnt_srs["count"].head(60), 'cyan')
+        trace2 = horizontal_bar_chart(cnt_srs["count of non-zero revenue"].head(60), 'cyan')
+        trace5 = horizontal_bar_chart(cnt_srs["mean"].head(60), 'cyan')
+
+        # Hits
+        cnt_srs = self.train_df.groupby('totals.hits')['totals.transactionRevenue'].agg(['size', 'count', 'mean'])
+        cnt_srs.columns = ["count", "count of non-zero revenue", 'mean']
+        cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
+        trace3 = horizontal_bar_chart(cnt_srs["count"].head(60), 'black')
+        trace4 = horizontal_bar_chart(cnt_srs["count of non-zero revenue"].head(60), 'black')
+        trace6 = horizontal_bar_chart(cnt_srs["mean"].head(60), 'black')
+
+        # Creating two subplots
+        fig = subplots.make_subplots(rows=2, cols=3, vertical_spacing=0.08, horizontal_spacing=0.15,
+                                  subplot_titles=["Total Pageviews - Count", "Total Pageviews - Non-zero Revenue Count",
+                                                  "Total Pageviews - Mean Revenue",
+                                                  "Total Hits - Count", "Total Hits - Non-zero Revenue Count",
+                                                  "Total Hits - Mean Revenue"])
+
+        fig.append_trace(trace1, 1, 1)
+        fig.append_trace(trace2, 1, 2)
+        fig.append_trace(trace5, 1, 3)
+        fig.append_trace(trace3, 2, 1)
+        fig.append_trace(trace4, 2, 2)
+        fig.append_trace(trace6, 2, 3)
+
+        fig['layout'].update(height=1200, width=900, paper_bgcolor='rgb(233,233,233)', title="Visitor Profile Plots")
+        py.iplot(fig, filename='visitor-profile-plots')
