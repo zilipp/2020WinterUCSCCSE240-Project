@@ -36,7 +36,7 @@ def json_read(df):
 
 
 def drop_features(train, test):
-    to_drop = ["socialEngagementType", 'device.browserVersion', 'device.browserSize', 'device.flashVersion',
+    to_drop = ['sessionId', 'socialEngagementType', 'device.browserVersion', 'device.browserSize', 'device.flashVersion',
                'device.language',
                'device.mobileDeviceBranding', 'device.mobileDeviceInfo', 'device.mobileDeviceMarketingName',
                'device.mobileDeviceModel',
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     df_train, df_test = drop_features(df_train, df_test)
 
     # fill na
-    df_train, df_test= change_feature_type_and_fill_na(df_train, df_test)
+    df_train, df_test = change_feature_type_and_fill_na(df_train, df_test)
 
     # category to number
     df_train, df_test = category_to_number(df_train, df_test)

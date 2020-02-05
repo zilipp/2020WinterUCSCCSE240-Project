@@ -92,6 +92,7 @@ def revenue_customers(train_df, test_df):
 def separate_data(train, test):
     features = list(train.columns.values.tolist())
     features.remove("totals.transactionRevenue")
+    features.remove("date")
 
     # Split the train dataset into development and valid based on time
     train['date'] = train['date'].apply(
@@ -153,9 +154,15 @@ if __name__ == '__main__':
     # 1. load data to df, after parsing jason
     df_train = pd.read_csv("../data/train_concise.csv", index_col='fullVisitorId')
     df_test = pd.read_csv("../data/test_concise.csv", index_col='fullVisitorId')
+
+    # print(df_train['date'].head())
+    # df_train['date'] = pd.to_datetime(df_train['date'], format='%Y%M%d')
+    # process data feature
+    # df_train['date'] = df_train['date'].apply(
+    #     lambda x: datetime.date(int(str(x)[:4]), int(str(x)[4:6]), int(str(x)[6:])))
+
     print(df_test.info())
     print(df_train.shape, df_test.shape)
-
     # group data frame by fullVisitorId
     # gdf = revenue_customers(df_train, df_test)
 
@@ -174,6 +181,8 @@ if __name__ == '__main__':
 
     # separate labels and split data
     train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
+
+    print(train_X.info())
 
     # build and train model
     pred_test, model, pred_val = run_lgb(train_X, train_y, val_X, val_y, test_X)
