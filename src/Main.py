@@ -57,25 +57,25 @@ def missing_value_info(data):
     print("Total columns at least one Values: ")
     print(df[~(df['Total'] == 0)])  # Returning values of nulls different of 0
 
-    print("\n Total of Sales % of Total: ", round((df_train[df_train['totals.transactionRevenue'] != np.nan][
-                                                       'totals.transactionRevenue'].count() / len(
-        df_train['totals.transactionRevenue']) * 100), 4))
+    print("\n Total of Sales % of Total: ", round((df_train[df_train['totalstransactionRevenue'] != np.nan][
+                                                       'totalstransactionRevenue'].count() / len(
+        df_train['totalstransactionRevenue']) * 100), 4))
 
     return columns
 
 
 def revenue_customers(train_df, test_df):
-    train_df["totals.transactionRevenue"] = train_df["totals.transactionRevenue"].astype('float')
-    gdf = train_df.groupby("fullVisitorId")["totals.transactionRevenue"].sum().reset_index()
+    train_df["totalstransactionRevenue"] = train_df["totalstransactionRevenue"].astype('float')
+    gdf = train_df.groupby("fullVisitorId")["totalstransactionRevenue"].sum().reset_index()
 
     plt.figure(figsize=(8, 6))
-    plt.scatter(range(gdf.shape[0]), np.sort(np.log1p(gdf["totals.transactionRevenue"].values)))
+    plt.scatter(range(gdf.shape[0]), np.sort(np.log1p(gdf["totalstransactionRevenue"].values)))
     plt.xlabel('index', fontsize=12)
     plt.ylabel('TransactionRevenue', fontsize=12)
     # plt.show()
 
-    nzi = pd.notnull(train_df["totals.transactionRevenue"]).sum()
-    nzr = (gdf["totals.transactionRevenue"] > 0).sum()
+    nzi = pd.notnull(train_df["totalstransactionRevenue"]).sum()
+    nzr = (gdf["totalstransactionRevenue"] > 0).sum()
     # print("Number of instances in train set with non-zero revenue : ", nzi, " and ratio is : ", nzi / train_df.shape[0])
     # print("Number of unique customers with non-zero revenue : ", nzr, "and the ratio is : ", nzr / gdf.shape[0])
     #
@@ -91,7 +91,8 @@ def revenue_customers(train_df, test_df):
 
 def separate_data(train, test):
     features = list(train.columns.values.tolist())
-    features.remove("totals.transactionRevenue")
+    features.remove("totalstransactionRevenue")
+    features.remove("fullVisitorId")
     features.remove("date")
 
     # Split the train dataset into development and valid based on time
@@ -102,8 +103,8 @@ def separate_data(train, test):
 
     dev_df = train[train['date'] <= datetime.date(2017, 5, 31)]
     val_df = train[train['date'] > datetime.date(2017, 5, 31)]
-    dev_y = np.log1p(dev_df["totals.transactionRevenue"].values)
-    val_y = np.log1p(val_df["totals.transactionRevenue"].values)
+    dev_y = np.log1p(dev_df["totalstransactionRevenue"].values)
+    val_y = np.log1p(val_df["totalstransactionRevenue"].values)
 
     dev_X = dev_df[features]
     val_X = val_df[features]
@@ -123,13 +124,14 @@ def run_lgb(train_X, train_y, val_X, val_y, test_X):
         "learning_rate": 0.1,
         "bagging_fraction": 0.7,
         "feature_fraction": 0.5,
-        "bagging_frequency": 5,
+        "bagging_freq": 5,
         "bagging_seed": 2018,
         "verbosity": -1
     }
 
     lgtrain = lgb.Dataset(train_X, label=train_y)
     lgval = lgb.Dataset(val_X, label=val_y)
+
     model = lgb.train(params, lgtrain, 1000, valid_sets=[lgval], early_stopping_rounds=100, verbose_eval=100)
 
     pred_test_y = model.predict(test_X, num_iteration=model.best_iteration)
@@ -142,7 +144,7 @@ def run_lgb(train_X, train_y, val_X, val_y, test_X):
 
 def validate(val_df, pred_val):
     val_pred_df = pd.DataFrame({"fullVisitorId": val_df["fullVisitorId"].values})
-    val_pred_df["transactionRevenue"] = val_df["totals.transactionRevenue"].values
+    val_pred_df["transactionRevenue"] = val_df["totalstransactionRevenue"].values
     val_pred_df["PredictedRevenue"] = np.expm1(pred_val)
     # print(np.sqrt(metrics.mean_squared_error(np.log1p(val_pred_df["transactionRevenue"].values), np.log1p(val_pred_df["PredictedRevenue"].values))))
     val_pred_df = val_pred_df.groupby("fullVisitorId")["transactionRevenue", "PredictedRevenue"].sum().reset_index()
@@ -152,17 +154,17 @@ def validate(val_df, pred_val):
 
 if __name__ == '__main__':
     # 1. load data to df, after parsing jason
-    df_train = pd.read_csv("../data/train_concise.csv", index_col='fullVisitorId')
-    df_test = pd.read_csv("../data/test_concise.csv", index_col='fullVisitorId')
+    df_train = pd.read_csv("../data/train_concise.csv")
+    df_test = pd.read_csv("../data/test_concise.csv")
 
     # print(df_train['date'].head())
     # df_train['date'] = pd.to_datetime(df_train['date'], format='%Y%M%d')
     # process data feature
     # df_train['date'] = df_train['date'].apply(
     #     lambda x: datetime.date(int(str(x)[:4]), int(str(x)[4:6]), int(str(x)[6:])))
-
+    print(df_train.info())
     print(df_test.info())
-    print(df_train.shape, df_test.shape)
+
     # group data frame by fullVisitorId
     # gdf = revenue_customers(df_train, df_test)
 
