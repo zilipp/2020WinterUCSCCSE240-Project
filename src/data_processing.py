@@ -6,9 +6,10 @@ from pandas import json_normalize  # to normalize the json file
 import random
 import datetime
 from sklearn import preprocessing
+import matplotlib.pyplot as plt
 
 dir_path = "../data/"
-p = 0.01  # fractional number to skip rows and read just a random sample of the our dataset.
+p = 0.001  # fractional number to skip rows and read just a random sample of the our dataset.
 
 
 # Transform the json format columns in table
@@ -34,6 +35,34 @@ def json_read(df):
         print(list(column_as_df.columns.values))
     print(f"Loaded {os.path.basename(data_frame)}. Shape: {df.shape}")
     return df
+
+
+def missing_value_info(data):
+    columns = data.columns[data.isnull().any()].tolist()
+    # getting the sum of null values and ordering
+    total = data.isnull().sum().sort_values(ascending=False)
+    # getting the percent and order of null
+    percent = (data.isnull().sum() / data.isnull().count() * 100).sort_values(ascending=False)
+    percentList = percent.tolist()
+    percentLabelList = percent.index.tolist()
+
+    df = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
+
+    print("Total columns at least one Values: ")
+    print(df[~(df['Total'] == 0)])  # Returning values of nulls different of 0
+
+    print("\n Total of Sales % of Total: ", round((df_train[df_train['totalstransactionRevenue'] != np.nan][
+         'totalstransactionRevenue'].count() / len(df_train['totalstransactionRevenue']) * 100), 4))
+
+    tuple_data = [(i, j) for (i, j) in zip(percentList, percentLabelList) if i > 0]
+    percentList, percentLabelList = [list(c) for c in zip(*tuple_data)]
+    percentListSize = len(percentList)
+    ind = np.arange(percentListSize)
+    plt.bar(ind, percentList, width=0.3)
+    plt.xticks(ind, percentLabelList, rotation=90)
+    plt.show()
+
+    return columns
 
 
 def drop_features(train, test):
@@ -116,6 +145,10 @@ if __name__ == '__main__':
     # process data feature
     # df_train['date'] = df_train['date'].apply(
     #     lambda x: datetime.date(int(str(x)[:4]), int(str(x)[4:6]), int(str(x)[6:])))
+
+    # missing values
+    missing_columns = missing_value_info(df_train)
+
 
     # drop features
     df_train, df_test = drop_features(df_train, df_test)
