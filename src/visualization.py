@@ -215,4 +215,4 @@ class Visualization:
         fig.append_trace(trace6, 2, 3)
 
         fig['layout'].update(height=1200, width=900, paper_bgcolor='rgb(233,233,233)', title="Visitor Profile Plots")
-        py.plot(fig, filename='visitor-profile-plots.html', auto_open=False)
+        py.plot(fig, filename='../graphs/visitor-profile-plots.html', auto_open=False)
