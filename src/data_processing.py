@@ -65,6 +65,11 @@ def missing_value_info(data):
     return columns
 
 
+def constant_value_info(train_df):
+    const_cols = [c for c in train_df.columns if train_df[c].nunique(dropna=False) == 1]
+    return const_cols
+
+
 def drop_features(train, test):
     to_drop = ['sessionId', 'socialEngagementType', 'devicebrowserVersion', 'devicebrowserSize', 'deviceflashVersion',
                'devicelanguage',
@@ -137,6 +142,8 @@ def category_to_number(train, test):
     return train, test
 
 
+
+
 if __name__ == '__main__':
     # 1. load data to df, and parse jason, then output to csv
     df_train = json_read("train.csv")
@@ -149,6 +156,8 @@ if __name__ == '__main__':
     # missing values
     missing_columns = missing_value_info(df_train)
 
+    # constant values
+    const_columns = constant_value_info(df_train)
 
     # drop features
     df_train, df_test = drop_features(df_train, df_test)

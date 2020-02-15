@@ -146,10 +146,17 @@ def validate(val_df, pred_val):
     val_pred_df = pd.DataFrame({"fullVisitorId": val_df["fullVisitorId"].values})
     val_pred_df["transactionRevenue"] = val_df["totalstransactionRevenue"].values
     val_pred_df["PredictedRevenue"] = np.expm1(pred_val)
-    # print(np.sqrt(metrics.mean_squared_error(np.log1p(val_pred_df["transactionRevenue"].values), np.log1p(val_pred_df["PredictedRevenue"].values))))
-    val_pred_df = val_pred_df.groupby("fullVisitorId")["transactionRevenue", "PredictedRevenue"].sum().reset_index()
-    print(np.sqrt(metrics.mean_squared_error(np.log1p(val_pred_df["transactionRevenue"].values),
-                                             np.log1p(val_pred_df["PredictedRevenue"].values))))
+    val_pred_df = val_pred_df.groupby('fullVisitorId')[['transactionRevenue', 'PredictedRevenue']].sum().reset_index()
+    print(np.sqrt(metrics.mean_squared_error(np.log1p(val_pred_df['transactionRevenue'].values),
+                                             np.log1p(val_pred_df['PredictedRevenue'].values))))
+
+
+def show_feature_importance(model):
+    fig, ax = plt.subplots(figsize=(12, 18))
+    lgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
+    ax.grid(False)
+    plt.title("LightGBM - Feature Importance", fontsize=15)
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -191,3 +198,7 @@ if __name__ == '__main__':
 
     # validate the model
     validate(val_df, pred_val)
+
+    # feature importance
+    show_feature_importance(model)
+
