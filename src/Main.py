@@ -1,14 +1,14 @@
 import os
 import random
 
-import keras
+# import keras
 import pandas as pd
 import numpy as np
 import datetime
 import setuptools
 import time
 
-from keras.wrappers.scikit_learn import KerasRegressor
+# from keras.wrappers.scikit_learn import KerasRegressor
 from scipy.stats import kurtosis, skew  # it's to explore some statistics of numerical value
 
 import matplotlib.pyplot as plt  # to graphics plot
