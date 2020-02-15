@@ -1,11 +1,14 @@
 import os
 import random
+
+import keras
 import pandas as pd
 import numpy as np
 import datetime
 import setuptools
 import time
 
+from keras.wrappers.scikit_learn import KerasRegressor
 from scipy.stats import kurtosis, skew  # it's to explore some statistics of numerical value
 
 import matplotlib.pyplot as plt  # to graphics plot
@@ -30,6 +33,17 @@ from pandas import json_normalize  # to normalize the json file
 from sklearn import model_selection, preprocessing, metrics
 import lightgbm as lgb
 
+from tensorflow import keras
+from tensorflow.keras import layers
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Dropout
+import keras.backend as K
+
+from numpy import loadtxt
+from xgboost import XGBClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
 # sel defined class
 from src.visualization import Visualization
 
@@ -42,6 +56,7 @@ from src.visualization import Visualization
 
 dir_path = "../data/"
 p = 0.001  # fractional number to skip rows and read just a random sample of the our dataset.
+mod = 'XGBOOST'#'LGBM' # RNN / XGBOOST
 plt.style.use('fivethirtyeight')  # to set a style to all graphs
 
 
@@ -142,6 +157,31 @@ def run_lgb(train_X, train_y, val_X, val_y, test_X):
     return pred_test_y, model, pred_val_y
 
 
+def run_NN(train_X, train_y, val_X, val_y, test_X):
+    # train_X = K.cast_to_floatx(train_X)
+    # train_y = K.cast_to_floatx(train_y)
+    # val_X = K.cast_to_floatx(val_X)
+    # val_y = K.cast_to_floatx(val_y)
+
+    # Neural network
+    # model = Sequential()
+    # model.add(Dense(30, input_dim=len(train_X[0]), activation='relu'))
+    # model.add(Dense(40, activation='relu'))
+    # model.add(Dense(12, activation='relu'))
+    # model.add(Dense(1, activation='linear'))
+
+    model = keras.Sequential([
+        layers.Dense(30, activation='relu', input_shape=[len(train_X[0])]),
+        layers.Dense(25, activation='relu'),
+        layers.Dense(1)
+    ])
+
+    model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
+    hist = model.fit(train_X, train_y, batch_size=30, epochs=15, validation_data=(val_X, val_y))
+    pred_test = model.predict([test_X], batch_size=30, verbose=1)
+    return pred_test
+
+
 def validate(val_df, pred_val):
     val_pred_df = pd.DataFrame({"fullVisitorId": val_df["fullVisitorId"].values})
     val_pred_df["transactionRevenue"] = val_df["totalstransactionRevenue"].values
@@ -149,7 +189,6 @@ def validate(val_df, pred_val):
     val_pred_df = val_pred_df.groupby('fullVisitorId')[['transactionRevenue', 'PredictedRevenue']].sum().reset_index()
     print(np.sqrt(metrics.mean_squared_error(np.log1p(val_pred_df['transactionRevenue'].values),
                                              np.log1p(val_pred_df['PredictedRevenue'].values))))
-
 
 def show_feature_importance(model):
     fig, ax = plt.subplots(figsize=(12, 18))
@@ -159,16 +198,27 @@ def show_feature_importance(model):
     plt.show()
 
 
+def run_xgb(train_X, train_y, val_X, val_y, test_X):
+
+    # fit model no training data
+    model = XGBClassifier()
+    model.fit(train_X, train_y)
+
+    y_pred_val = model.predict(val_X)
+    y_pred_val = [round(value) for value in y_pred_val]
+    y_pred_val = [0 if i < 0 else i for i in y_pred_val]
+
+    y_pred_test = model.predict(test_X)
+    y_pred_test = [round(value) for value in y_pred_test]
+    y_pred_test = [0 if i < 0 else i for i in y_pred_test]
+    return y_pred_test, model, y_pred_val
+
+
 if __name__ == '__main__':
     # 1. load data to df, after parsing jason
     df_train = pd.read_csv("../data/train_concise.csv")
     df_test = pd.read_csv("../data/test_concise.csv")
 
-    # print(df_train['date'].head())
-    # df_train['date'] = pd.to_datetime(df_train['date'], format='%Y%M%d')
-    # process data feature
-    # df_train['date'] = df_train['date'].apply(
-    #     lambda x: datetime.date(int(str(x)[:4]), int(str(x)[4:6]), int(str(x)[6:])))
     print(df_train.info())
     print(df_test.info())
 
@@ -190,15 +240,28 @@ if __name__ == '__main__':
 
     # separate labels and split data
     train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
-
-    print(train_X.info())
+    print('==========final data==========')
+    print(train_X.shape)
+    print(train_y.shape)
+    print(val_X.shape)
+    print(val_y.shape)
+    print(test_X.shape)
 
     # build and train model
-    pred_test, model, pred_val = run_lgb(train_X, train_y, val_X, val_y, test_X)
+    if mod == 'LGBM':
+        pred_test, model, pred_val = run_lgb(train_X, train_y, val_X, val_y, test_X)
+        # validate the model
+        validate(val_df, pred_val)
+        # feature importance
+        show_feature_importance(model)
+    elif mod == 'NN':
+        pred_test = run_NN(train_X, train_y, val_X, val_y, test_X)
+        print('NN done')
+    elif mod == 'XGBOOST':
+        pred_test, model, pred_val = run_xgb(train_X, train_y, val_X, val_y, test_X)
+        validate(val_df, pred_val)
+        print('XGBOOST done')
 
-    # validate the model
-    validate(val_df, pred_val)
 
-    # feature importance
-    show_feature_importance(model)
+
 

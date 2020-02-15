@@ -9,7 +9,7 @@ from sklearn import preprocessing
 import matplotlib.pyplot as plt
 
 dir_path = "../data/"
-p = 0.001  # fractional number to skip rows and read just a random sample of the our dataset.
+p = 0.01  # fractional number to skip rows and read just a random sample of the our dataset.
 
 
 # Transform the json format columns in table
