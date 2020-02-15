@@ -33,16 +33,11 @@ from pandas import json_normalize  # to normalize the json file
 from sklearn import model_selection, preprocessing, metrics
 import lightgbm as lgb
 
-from tensorflow import keras
-from tensorflow.keras import layers
-from keras.models import Sequential
-from keras.layers import Dense, Activation, Dropout
-import keras.backend as K
 
 from numpy import loadtxt
 from xgboost import XGBClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+# from sklearn.model_selection import train_test_split
+# from sklearn.metrics import accuracy_score
 
 # sel defined class
 from src.visualization import Visualization
@@ -56,7 +51,7 @@ from src.visualization import Visualization
 
 dir_path = "../data/"
 p = 0.001  # fractional number to skip rows and read just a random sample of the our dataset.
-mod = 'XGBOOST'#'LGBM' # RNN / XGBOOST
+mod = 'LGBM'#'LGBM' # RNN / XGBOOST
 plt.style.use('fivethirtyeight')  # to set a style to all graphs
 
 
@@ -157,29 +152,29 @@ def run_lgb(train_X, train_y, val_X, val_y, test_X):
     return pred_test_y, model, pred_val_y
 
 
-def run_NN(train_X, train_y, val_X, val_y, test_X):
-    # train_X = K.cast_to_floatx(train_X)
-    # train_y = K.cast_to_floatx(train_y)
-    # val_X = K.cast_to_floatx(val_X)
-    # val_y = K.cast_to_floatx(val_y)
-
-    # Neural network
-    # model = Sequential()
-    # model.add(Dense(30, input_dim=len(train_X[0]), activation='relu'))
-    # model.add(Dense(40, activation='relu'))
-    # model.add(Dense(12, activation='relu'))
-    # model.add(Dense(1, activation='linear'))
-
-    model = keras.Sequential([
-        layers.Dense(30, activation='relu', input_shape=[len(train_X[0])]),
-        layers.Dense(25, activation='relu'),
-        layers.Dense(1)
-    ])
-
-    model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
-    hist = model.fit(train_X, train_y, batch_size=30, epochs=15, validation_data=(val_X, val_y))
-    pred_test = model.predict([test_X], batch_size=30, verbose=1)
-    return pred_test
+# def run_NN(train_X, train_y, val_X, val_y, test_X):
+#     # train_X = K.cast_to_floatx(train_X)
+#     # train_y = K.cast_to_floatx(train_y)
+#     # val_X = K.cast_to_floatx(val_X)
+#     # val_y = K.cast_to_floatx(val_y)
+#
+#     # Neural network
+#     # model = Sequential()
+#     # model.add(Dense(30, input_dim=len(train_X[0]), activation='relu'))
+#     # model.add(Dense(40, activation='relu'))
+#     # model.add(Dense(12, activation='relu'))
+#     # model.add(Dense(1, activation='linear'))
+#
+#     model = keras.Sequential([
+#         layers.Dense(30, activation='relu', input_shape=[len(train_X[0])]),
+#         layers.Dense(25, activation='relu'),
+#         layers.Dense(1)
+#     ])
+#
+#     model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
+#     hist = model.fit(train_X, train_y, batch_size=30, epochs=15, validation_data=(val_X, val_y))
+#     pred_test = model.predict([test_X], batch_size=30, verbose=1)
+#     return pred_test
 
 
 def validate(val_df, pred_val):
@@ -225,18 +220,18 @@ if __name__ == '__main__':
     # group data frame by fullVisitorId
     # gdf = revenue_customers(df_train, df_test)
 
-    # # 2.data visualization(this part only plot, do not change data)
-    # vis = Visualization(df_train)
-    # # a) with time
-    # vis.plot_revenue_count_with_time()
-    # # b) difference of device
-    # vis.plot_diff_device_importance()
-    # # c) traffic source
-    # vis.plot_diff_traffic_importance()
-    # # d) geo distribution
-    # vis.plot_diff_geo_importance()
-    # # e) visit profile
-    # vis.plot_visit_importance()
+    # 2.data visualization(this part only plot, do not change data)
+    vis = Visualization(df_train)
+    # a) with time
+    vis.plot_revenue_count_with_time()
+    # b) difference of device
+    vis.plot_diff_device_importance()
+    # c) traffic source
+    vis.plot_diff_traffic_importance()
+    # d) geo distribution
+    vis.plot_diff_geo_importance()
+    # e) visit profile
+    vis.plot_visit_importance()
 
     # separate labels and split data
     train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
@@ -254,9 +249,9 @@ if __name__ == '__main__':
         validate(val_df, pred_val)
         # feature importance
         show_feature_importance(model)
-    elif mod == 'NN':
-        pred_test = run_NN(train_X, train_y, val_X, val_y, test_X)
-        print('NN done')
+    # elif mod == 'NN':
+    #     pred_test = run_NN(train_X, train_y, val_X, val_y, test_X)
+    #     print('NN done')
     elif mod == 'XGBOOST':
         pred_test, model, pred_val = run_xgb(train_X, train_y, val_X, val_y, test_X)
         validate(val_df, pred_val)
