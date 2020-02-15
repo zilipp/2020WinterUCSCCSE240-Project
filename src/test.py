@@ -66,6 +66,19 @@ import numpy as np
 # plt.xlabel
 # plt.show()
 
-df = pd.DataFrame({'lab': ['A', 'B', 'C'], 'val': [10, 30, 20]})
-ax = df.plot.barh(x='lab', y='val')
-plt.show()
+import pandas as pd
+
+df = pd.DataFrame({'foo': [1, 1, 3, 3, 3, 3], 'bar': [4, 0, 5, 6, 0, 9]})
+df.head()
+
+#        foo    bar
+#   0      1      4
+#   1      1      0
+#   2      3      5
+#   3      3      6
+#   3      3      0
+#   3      3      9
+
+
+df = df.groupby('foo')['bar'].agg(['size', lambda x: x > 0])
+print(df.head())

@@ -2,6 +2,7 @@ import plotly.graph_objs as go
 import plotly.offline as py
 from plotly import subplots
 import datetime
+import pandas as pd
 
 
 def horizontal_bar_chart(cnt_srs, color):
@@ -223,3 +224,19 @@ class Visualization:
 
         fig['layout'].update(height=1200, width=900, paper_bgcolor='rgb(233,233,233)', title="Visitor Profile Plots")
         py.plot(fig, filename='../graphs/visitor-profile-plots.html', auto_open=False)
+
+
+if  __name__ == '__main__':
+    df_train = pd.read_csv("../data/train_concise.csv")
+
+    vis = Visualization(df_train)
+    # a) with time
+    vis.plot_revenue_count_with_time()
+    # b) difference of device
+    vis.plot_diff_device_importance()
+    # c) traffic source
+    vis.plot_diff_traffic_importance()
+    # d) geo distribution
+    vis.plot_diff_geo_importance()
+    # e) visit profile
+    vis.plot_visit_importance()
