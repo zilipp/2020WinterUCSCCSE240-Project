@@ -67,9 +67,16 @@ import numpy as np
 # plt.show()
 
 import pandas as pd
+import numpy as np
 
-df = pd.DataFrame({'foo': [1, 1, 3, 3, 3, 3], 'bar': [4, 0, 5, 6, 0, 9]})
+df = pd.DataFrame({'foo': [1, 1, 3, 3, 3, 3], 'bar': [4, 0, 5, 0, 0, 9]})
 df.head()
+
+def foo_func(x):
+    return np.count_nonzero(x)
+
+    # m = x.mean()
+    # return 1 if m > 0.5 else 0 if m < 0.5 else np.nan
 
 #        foo    bar
 #   0      1      4
@@ -79,6 +86,5 @@ df.head()
 #   3      3      0
 #   3      3      9
 
-
-df = df.groupby('foo')['bar'].agg(['size', lambda x: x > 0])
+df = df.groupby('foo')['bar'].agg(['size', foo_func, 'mean'])
 print(df.head())

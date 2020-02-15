@@ -8,3 +8,7 @@ plotly
 
 sklearn
 lightgbm
+
+keras
+tensorflow
+xgboost

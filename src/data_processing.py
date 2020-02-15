@@ -159,11 +159,11 @@ if __name__ == '__main__':
     data_train_raw = json_read('train.csv')
     processed_train_data = process_data(data_train_raw)
     print(processed_train_data.info())
-    processed_train_data.to_csv('../data/train_concise.csv', index=False)
+    processed_train_data.to_csv('../data/train_peng.csv', index=False)
     del data_train_raw, processed_train_data
 
     data_test_raw = json_read('test.csv')
     processed_test_data = process_data(data_test_raw)
     print(processed_test_data.info())
-    processed_test_data.to_csv('../data/test_concise.csv', index=False)
+    processed_test_data.to_csv('../data/test_peng.csv', index=False)
     del data_test_raw, processed_test_data
