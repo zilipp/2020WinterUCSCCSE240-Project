@@ -1,14 +1,14 @@
 import os
 import random
 
-import keras
+# import keras
 import pandas as pd
 import numpy as np
 import datetime
 import setuptools
 import time
 
-from keras.wrappers.scikit_learn import KerasRegressor
+# from keras.wrappers.scikit_learn import KerasRegressor
 from scipy.stats import kurtosis, skew  # it's to explore some statistics of numerical value
 
 import matplotlib.pyplot as plt  # to graphics plot
@@ -157,29 +157,29 @@ def run_lgb(train_X, train_y, val_X, val_y, test_X):
     return pred_test_y, model, pred_val_y
 
 
-def run_NN(train_X, train_y, val_X, val_y, test_X):
-    # train_X = K.cast_to_floatx(train_X)
-    # train_y = K.cast_to_floatx(train_y)
-    # val_X = K.cast_to_floatx(val_X)
-    # val_y = K.cast_to_floatx(val_y)
-
-    # Neural network
-    # model = Sequential()
-    # model.add(Dense(30, input_dim=len(train_X[0]), activation='relu'))
-    # model.add(Dense(40, activation='relu'))
-    # model.add(Dense(12, activation='relu'))
-    # model.add(Dense(1, activation='linear'))
-
-    model = keras.Sequential([
-        layers.Dense(30, activation='relu', input_shape=[len(train_X[0])]),
-        layers.Dense(25, activation='relu'),
-        layers.Dense(1)
-    ])
-
-    model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
-    hist = model.fit(train_X, train_y, batch_size=30, epochs=15, validation_data=(val_X, val_y))
-    pred_test = model.predict([test_X], batch_size=30, verbose=1)
-    return pred_test
+# def run_NN(train_X, train_y, val_X, val_y, test_X):
+#     # train_X = K.cast_to_floatx(train_X)
+#     # train_y = K.cast_to_floatx(train_y)
+#     # val_X = K.cast_to_floatx(val_X)
+#     # val_y = K.cast_to_floatx(val_y)
+#
+#     # Neural network
+#     # model = Sequential()
+#     # model.add(Dense(30, input_dim=len(train_X[0]), activation='relu'))
+#     # model.add(Dense(40, activation='relu'))
+#     # model.add(Dense(12, activation='relu'))
+#     # model.add(Dense(1, activation='linear'))
+#
+#     model = keras.Sequential([
+#         layers.Dense(30, activation='relu', input_shape=[len(train_X[0])]),
+#         layers.Dense(25, activation='relu'),
+#         layers.Dense(1)
+#     ])
+#
+#     model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
+#     hist = model.fit(train_X, train_y, batch_size=30, epochs=15, validation_data=(val_X, val_y))
+#     pred_test = model.predict([test_X], batch_size=30, verbose=1)
+#     return pred_test
 
 
 def validate(val_df, pred_val):
@@ -254,9 +254,9 @@ if __name__ == '__main__':
         validate(val_df, pred_val)
         # feature importance
         show_feature_importance(model)
-    elif mod == 'NN':
-        pred_test = run_NN(train_X, train_y, val_X, val_y, test_X)
-        print('NN done')
+    # elif mod == 'NN':
+    #     pred_test = run_NN(train_X, train_y, val_X, val_y, test_X)
+    #     print('NN done')
     elif mod == 'XGBOOST':
         pred_test, model, pred_val = run_xgb(train_X, train_y, val_X, val_y, test_X)
         validate(val_df, pred_val)

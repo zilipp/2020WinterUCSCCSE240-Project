@@ -34,7 +34,7 @@ class Visualization:
 
     def plot_diff_traffic_importance(self):
         # Continent
-        cnt_srs = self.train_df.groupby('trafficSource.source')['totals.transactionRevenue'].agg(['size', 'count', 'mean'])
+        cnt_srs = self.train_df.groupby('trafficSourcesource')['totalstransactionRevenue'].agg(['size', 'count', 'mean'])
         cnt_srs.columns = ["count", "count of non-zero revenue", "mean"]
         cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
         trace1 = horizontal_bar_chart(cnt_srs["count"].head(10), 'green')
@@ -42,7 +42,7 @@ class Visualization:
         trace3 = horizontal_bar_chart(cnt_srs["mean"].head(10), 'green')
 
         # Sub-continent
-        cnt_srs = self.train_df.groupby('trafficSource.medium')['totals.transactionRevenue'].agg(['size', 'count', 'mean'])
+        cnt_srs = self.train_df.groupby('trafficSourcemedium')['totalstransactionRevenue'].agg(['size', 'count', 'mean'])
         cnt_srs.columns = ["count", "count of non-zero revenue", "mean"]
         cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
         trace4 = horizontal_bar_chart(cnt_srs["count"], 'purple')
@@ -70,7 +70,7 @@ class Visualization:
 
     def plot_diff_device_importance(self):
         # Device Browser
-        cnt_srs = self.train_df.groupby('device.browser')['totals.transactionRevenue'].agg(['size', 'count', 'mean'])
+        cnt_srs = self.train_df.groupby('devicebrowser')['totalstransactionRevenue'].agg(['size', 'count', 'mean'])
         cnt_srs.columns = ["count", "count of non-zero revenue", "mean"]
         cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
         trace1 = horizontal_bar_chart(cnt_srs["count"].head(10), 'rgba(50, 171, 96, 0.6)')
@@ -78,7 +78,7 @@ class Visualization:
         trace3 = horizontal_bar_chart(cnt_srs["mean"].head(10), 'rgba(50, 171, 96, 0.6)')
 
         # Device Category
-        cnt_srs = self.train_df.groupby('device.deviceCategory')['totals.transactionRevenue'].agg(['size', 'count', 'mean'])
+        cnt_srs = self.train_df.groupby('devicedeviceCategory')['totalstransactionRevenue'].agg(['size', 'count', 'mean'])
         cnt_srs.columns = ["count", "count of non-zero revenue", "mean"]
         cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
         trace4 = horizontal_bar_chart(cnt_srs["count"].head(10), 'rgba(71, 58, 131, 0.8)')
@@ -86,7 +86,7 @@ class Visualization:
         trace6 = horizontal_bar_chart(cnt_srs["mean"].head(10), 'rgba(71, 58, 131, 0.8)')
 
         # Operating system
-        cnt_srs = self.train_df.groupby('device.operatingSystem')['totals.transactionRevenue'].agg(['size', 'count', 'mean'])
+        cnt_srs = self.train_df.groupby('deviceoperatingSystem')['totalstransactionRevenue'].agg(['size', 'count', 'mean'])
         cnt_srs.columns = ["count", "count of non-zero revenue", "mean"]
         cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
         trace7 = horizontal_bar_chart(cnt_srs["count"].head(10), 'rgba(246, 78, 139, 0.6)')
@@ -119,7 +119,7 @@ class Visualization:
 
     def plot_diff_geo_importance(self):
         # Continent
-        cnt_srs = self.train_df.groupby('geoNetwork.continent')['totals.transactionRevenue'].agg(['size', 'count', 'mean'])
+        cnt_srs = self.train_df.groupby('geoNetworkcontinent')['totalstransactionRevenue'].agg(['size', 'count', 'mean'])
         cnt_srs.columns = ["count", "count of non-zero revenue", "mean"]
         cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
         trace1 = horizontal_bar_chart(cnt_srs["count"].head(10), 'rgba(58, 71, 80, 0.6)')
@@ -127,7 +127,7 @@ class Visualization:
         trace3 = horizontal_bar_chart(cnt_srs["mean"].head(10), 'rgba(58, 71, 80, 0.6)')
 
         # Sub-continent
-        cnt_srs = self.train_df.groupby('geoNetwork.subContinent')['totals.transactionRevenue'].agg(
+        cnt_srs = self.train_df.groupby('geoNetworksubContinent')['totalstransactionRevenue'].agg(
             ['size', 'count', 'mean'])
         cnt_srs.columns = ["count", "count of non-zero revenue", "mean"]
         cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
@@ -136,7 +136,7 @@ class Visualization:
         trace6 = horizontal_bar_chart(cnt_srs["mean"], 'orange')
 
         # Network domain
-        cnt_srs = self.train_df.groupby('geoNetwork.networkDomain')['totals.transactionRevenue'].agg(
+        cnt_srs = self.train_df.groupby('geoNetworknetworkDomain')['totalstransactionRevenue'].agg(
             ['size', 'count', 'mean'])
         cnt_srs.columns = ["count", "count of non-zero revenue", "mean"]
         cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
@@ -169,7 +169,7 @@ class Visualization:
 
     def plot_revenue_count_with_time(self):
         # size includes NaN values, count does not:
-        cnt_srs = self.train_df.groupby('date')['totals.transactionRevenue'].agg(['size', 'count'])
+        cnt_srs = self.train_df.groupby('date')['totalstransactionRevenue'].agg(['size', 'count'])
         cnt_srs.columns = ["count", "count of non-zero revenue"]
         cnt_srs = cnt_srs.sort_index()
         # cnt_srs.index = cnt_srs.index.astype('str')
@@ -185,7 +185,7 @@ class Visualization:
 
     def plot_visit_importance(self):
         # Page views
-        cnt_srs = self.train_df.groupby('totals.pageviews')['totals.transactionRevenue'].agg(['size', 'count', 'mean'])
+        cnt_srs = self.train_df.groupby('totalspageviews')['totalstransactionRevenue'].agg(['size', 'count', 'mean'])
         cnt_srs.columns = ["count", "count of non-zero revenue", "mean"]
         cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
         trace1 = horizontal_bar_chart(cnt_srs["count"].head(60), 'cyan')
@@ -193,7 +193,7 @@ class Visualization:
         trace5 = horizontal_bar_chart(cnt_srs["mean"].head(60), 'cyan')
 
         # Hits
-        cnt_srs = self.train_df.groupby('totals.hits')['totals.transactionRevenue'].agg(['size', 'count', 'mean'])
+        cnt_srs = self.train_df.groupby('totalshits')['totalstransactionRevenue'].agg(['size', 'count', 'mean'])
         cnt_srs.columns = ["count", "count of non-zero revenue", 'mean']
         cnt_srs = cnt_srs.sort_values(by="count", ascending=False)
         trace3 = horizontal_bar_chart(cnt_srs["count"].head(60), 'black')
@@ -215,4 +215,4 @@ class Visualization:
         fig.append_trace(trace6, 2, 3)
 
         fig['layout'].update(height=1200, width=900, paper_bgcolor='rgb(233,233,233)', title="Visitor Profile Plots")
-        py.iplot(fig, filename='visitor-profile-plots')
+        py.plot(fig, filename='visitor-profile-plots.html', auto_open=False)
