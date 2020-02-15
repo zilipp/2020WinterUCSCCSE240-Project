@@ -1,0 +1,15 @@
+1. histogram
+    fix: pandas.series to tuplelist, then make into two list
+
+2. visualization might change the datatype of original dataframe
+    fix: do visualization before fillNA, since visualization need none values.
+
+3. LightGBM: Do not support special JSON characters in feature name.
+    fix: re-parse JSON file, replace special characters to empty recursively
+
+4. cannot load full dataset
+    fix: not yet
+
+5. visitID forget to drop?
+    fix: not yet
+
