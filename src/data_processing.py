@@ -9,7 +9,7 @@ from sklearn import preprocessing
 import matplotlib.pyplot as plt
 
 dir_path = "../data/"
-p = 0.5 # fractional number to skip rows and read just a random sample of the our dataset.
+p = 0.01 # fractional number to skip rows and read just a random sample of the our dataset.
 
 
 from src.visualization import Visualization
@@ -166,6 +166,21 @@ if __name__ == '__main__':
 
     # fill na
     df_train, df_test = change_feature_type_and_fill_na(df_train, df_test)
+
+    # 2.data visualization(this part only plot, do not change data)
+    # visualize before change category to number, since the label will encode from english to number
+    vis = Visualization(df_train)
+    # a) with time
+    vis.plot_revenue_count_with_time()
+    # b) difference of device
+    vis.plot_diff_device_importance()
+    # c) traffic source
+    vis.plot_diff_traffic_importance()
+    # d) geo distribution
+    vis.plot_diff_geo_importance()
+    # e) visit profile
+    vis.plot_visit_importance()
+
 
     # category to number
     df_train, df_test = category_to_number(df_train, df_test)

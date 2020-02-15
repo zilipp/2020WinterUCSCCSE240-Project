@@ -1,6 +1,7 @@
 import plotly.graph_objs as go
 import plotly.offline as py
 from plotly import subplots
+import datetime
 
 
 def horizontal_bar_chart(cnt_srs, color):
@@ -168,6 +169,10 @@ class Visualization:
         py.plot(fig, filename='../graphs/geo-plots.html', auto_open=False)
 
     def plot_revenue_count_with_time(self):
+        special_date_train = self.train_df
+        special_date_train['date'] = special_date_train['date'].apply(
+            lambda x: datetime.date(int(str(x)[:4]), int(str(x)[4:6]), int(str(x)[6:])))
+
         # size includes NaN values, count does not:
         cnt_srs = self.train_df.groupby('date')['totalstransactionRevenue'].agg(['size', 'count'])
         cnt_srs.columns = ["count", "count of non-zero revenue"]
