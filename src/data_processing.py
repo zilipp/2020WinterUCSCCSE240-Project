@@ -9,8 +9,10 @@ from sklearn import preprocessing
 import matplotlib.pyplot as plt
 
 dir_path = "../data/"
-p = 1  # fractional number to skip rows and read just a random sample of the our dataset.
+p = 0.5 # fractional number to skip rows and read just a random sample of the our dataset.
 
+
+from src.visualization import Visualization
 
 # Transform the json format columns in table
 def json_read(df):
@@ -70,7 +72,7 @@ def constant_value_info(train_df):
     return const_cols
 
 
-def drop_features(train, test):
+def drop_features(df):
     to_drop = ['sessionId', 'socialEngagementType', 'devicebrowserVersion', 'devicebrowserSize', 'deviceflashVersion',
                'devicelanguage',
                'devicemobileDeviceBranding', 'devicemobileDeviceInfo', 'devicemobileDeviceMarketingName',
@@ -86,11 +88,10 @@ def drop_features(train, test):
                'totalsbounces', 'totalsnewVisits', 'totalsvisits',
                'trafficSourceisTrueDirect',
                'trafficSourceadwordsClickInfoisVideoAd', 'totalsvisits']
-    result_df_test = test.drop(to_drop, axis=1)
-    result_df_train = train.drop(to_drop, axis=1)
-    if 'trafficSourcecampaignCode' in train.columns:
-        result_df_train = train.drop(['trafficSourcecampaignCode'], axis=1)
-    return result_df_train, result_df_test
+    result = df.drop(to_drop, axis=1)
+    if 'trafficSourcecampaignCode' in df.columns:
+        result = df.drop(['trafficSourcecampaignCode'], axis=1)
+    return result
 
 
 def change_feature_type_and_fill_na(train, test):
@@ -154,13 +155,14 @@ if __name__ == '__main__':
     #     lambda x: datetime.date(int(str(x)[:4]), int(str(x)[4:6]), int(str(x)[6:])))
 
     # missing values
-    missing_columns = missing_value_info(df_train)
+    # missing_columns = missing_value_info(df_train)
 
     # constant values
-    const_columns = constant_value_info(df_train)
+    # const_columns = constant_value_info(df_train)
 
     # drop features
-    df_train, df_test = drop_features(df_train, df_test)
+    df_train = drop_features(df_train)
+    df_test = drop_features(df_test)
 
     # fill na
     df_train, df_test = change_feature_type_and_fill_na(df_train, df_test)
@@ -168,10 +170,13 @@ if __name__ == '__main__':
     # category to number
     df_train, df_test = category_to_number(df_train, df_test)
     print(df_train.info())
+    print(df_test.info())
 
     # # add index name
     # df_train.rename(index={0: "index"})
     # df_test.rename(index={0: "index"})
+
+
 
     df_train.to_csv('../data/train_concise.csv', index=False)
     df_test.to_csv('../data/test_concise.csv', index=False)
