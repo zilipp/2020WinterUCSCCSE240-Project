@@ -1,6 +1,7 @@
 import plotly.graph_objs as go
 import plotly.offline as py
 from plotly import subplots
+import datetime
 
 
 def horizontal_bar_chart(cnt_srs, color):
@@ -30,7 +31,7 @@ def scatter_plot(cnt_srs, color):
 
 class Visualization:
     def __init__(self, train_df):
-        self.train_df = train_df
+        self.train_df = train_df.copy()
 
     def plot_diff_traffic_importance(self):
         # Continent
@@ -168,6 +169,12 @@ class Visualization:
         py.plot(fig, filename='../graphs/geo-plots.html', auto_open=False)
 
     def plot_revenue_count_with_time(self):
+
+        self.train_df['date'] = self.train_df['date'].apply(
+            lambda x: datetime.date(int(str(x)[:4]), int(str(x)[4:6]), int(str(x)[6:])))
+        self.train_df["totalstransactionRevenue"] = self.train_df["totalstransactionRevenue"].astype \
+            (float)
+
         # size includes NaN values, count does not:
         cnt_srs = self.train_df.groupby('date')['totalstransactionRevenue'].agg(['size', 'count'])
         cnt_srs.columns = ["count", "count of non-zero revenue"]
@@ -215,4 +222,4 @@ class Visualization:
         fig.append_trace(trace6, 2, 3)
 
         fig['layout'].update(height=1200, width=900, paper_bgcolor='rgb(233,233,233)', title="Visitor Profile Plots")
-        py.plot(fig, filename='visitor-profile-plots.html', auto_open=False)
+        py.plot(fig, filename='../graphs/visitor-profile-plots.html', auto_open=False)

@@ -56,7 +56,7 @@ from src.visualization import Visualization
 
 dir_path = "../data/"
 p = 0.001  # fractional number to skip rows and read just a random sample of the our dataset.
-mod = 'XGBOOST'#'LGBM' # RNN / XGBOOST
+mod = 'LGBM'#'LGBM' # RNN / XGBOOST
 plt.style.use('fivethirtyeight')  # to set a style to all graphs
 
 
@@ -225,18 +225,6 @@ if __name__ == '__main__':
     # group data frame by fullVisitorId
     # gdf = revenue_customers(df_train, df_test)
 
-    # # 2.data visualization(this part only plot, do not change data)
-    # vis = Visualization(df_train)
-    # # a) with time
-    # vis.plot_revenue_count_with_time()
-    # # b) difference of device
-    # vis.plot_diff_device_importance()
-    # # c) traffic source
-    # vis.plot_diff_traffic_importance()
-    # # d) geo distribution
-    # vis.plot_diff_geo_importance()
-    # # e) visit profile
-    # vis.plot_visit_importance()
 
     # separate labels and split data
     train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
