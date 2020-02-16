@@ -232,7 +232,7 @@ class Visualization:
 
 
 if  __name__ == '__main__':
-    df_train = pd.read_csv("../data/train_peng.csv")
+    df_train = pd.read_csv("../data/train_full.csv")
 
     vis = Visualization(df_train)
 

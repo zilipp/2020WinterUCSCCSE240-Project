@@ -3,7 +3,6 @@ import json  # to convert json in df
 import pandas as pd
 from pandas import json_normalize  # to normalize the json file
 import random
-from sklearn import preprocessing
 import matplotlib.pyplot as plt
 
 DATA_PATH = '../data/'
@@ -48,12 +47,6 @@ def missing_value_info(data):
     percent_label_list = percent.index.tolist()
 
     df = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
-
-    # print('Total columns at least one Values: ')
-    # print(df[~(df['Total'] == 0)])  # Returning values of nulls different of 0
-    #
-    # print('\n Total of Sales % of Total: ', round((df_train[df_train['totalstransactionRevenue'] != np.nan][
-    #      'totalstransactionRevenue'].count() / len(df_train['totalstransactionRevenue']) * 100), 4))
 
     tuple_data = [(i, j) for (i, j) in zip(percent_list, percent_label_list) if i > 0]
     percent_list, percent_label_list = [list(c) for c in zip(*tuple_data)]
@@ -123,25 +116,6 @@ def change_feature_type_and_fill_na(df):
         df['totalstransactionRevenue'] = df['totalstransactionRevenue'].fillna(0.0).astype(float)
 
     return df
-
-
-def category_to_number(train, test):
-    cat_cols = ['channelGrouping', 'devicebrowser',
-                'devicedeviceCategory', 'deviceoperatingSystem',
-                'geoNetworkcity', 'geoNetworkcontinent',
-                'geoNetworkcountry', 'geoNetworkmetro',
-                'geoNetworknetworkDomain', 'geoNetworkregion',
-                'geoNetworksubContinent',
-                'trafficSourcemedium',
-                'trafficSourcesource']
-
-    for col in cat_cols:
-        lbl = preprocessing.LabelEncoder()
-        lbl.fit(list(train[col].values.astype('str')) + list(test[col].values.astype('str')))
-        train[col] = lbl.transform(list(train[col].values.astype('str')))
-        test[col] = lbl.transform(list(test[col].values.astype('str')))
-
-    return train, test
 
 
 def process_data(raw_data):

@@ -60,25 +60,6 @@ mod = 'LGBM'#'LGBM' # RNN / XGBOOST
 plt.style.use('fivethirtyeight')  # to set a style to all graphs
 
 
-def missing_value_info(data):
-    columns = data.columns[data.isnull().any()].tolist()
-    # getting the sum of null values and ordering
-    total = data.isnull().sum().sort_values(ascending=False)
-    # getting the percent and order of null
-    percent = (data.isnull().sum() / data.isnull().count() * 100).sort_values(ascending=False)
-
-    # Concatenating the total and percent
-    df = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
-    print("Total columns at least one Values: ")
-    print(df[~(df['Total'] == 0)])  # Returning values of nulls different of 0
-
-    print("\n Total of Sales % of Total: ", round((df_train[df_train['totalstransactionRevenue'] != np.nan][
-                                                       'totalstransactionRevenue'].count() / len(
-        df_train['totalstransactionRevenue']) * 100), 4))
-
-    return columns
-
-
 def revenue_customers(train_df, test_df):
     train_df["totalstransactionRevenue"] = train_df["totalstransactionRevenue"].astype('float')
     gdf = train_df.groupby("fullVisitorId")["totalstransactionRevenue"].sum().reset_index()
@@ -103,6 +84,24 @@ def revenue_customers(train_df, test_df):
 
     return gdf
 
+
+def category_to_number(train, test):
+    cat_cols = ['channelGrouping', 'devicebrowser',
+                'devicedeviceCategory', 'deviceoperatingSystem',
+                'geoNetworkcity', 'geoNetworkcontinent',
+                'geoNetworkcountry', 'geoNetworkmetro',
+                'geoNetworknetworkDomain', 'geoNetworkregion',
+                'geoNetworksubContinent',
+                'trafficSourcemedium',
+                'trafficSourcesource']
+
+    for col in cat_cols:
+        lbl = preprocessing.LabelEncoder()
+        lbl.fit(list(train[col].values.astype('str')) + list(test[col].values.astype('str')))
+        train[col] = lbl.transform(list(train[col].values.astype('str')))
+        test[col] = lbl.transform(list(test[col].values.astype('str')))
+
+    return train, test
 
 def separate_data(train, test):
     features = list(train.columns.values.tolist())
@@ -218,7 +217,7 @@ if __name__ == '__main__':
     # 1. load data to df, after parsing jason
     df_train = pd.read_csv("../data/train_concise.csv")
     df_test = pd.read_csv("../data/test_concise.csv")
-
+    df_train, df_test = category_to_number(df_train, df_test)
     print(df_train.info())
     print(df_test.info())
 
