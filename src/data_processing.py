@@ -66,7 +66,7 @@ def constant_value_info(train_df):
 
 def drop_features(df):
     to_drop = ['sessionId', 'socialEngagementType', 'devicebrowserVersion', 'devicebrowserSize', 'deviceflashVersion',
-               'devicelanguage',
+               'devicelanguage', "visitId",
                'devicemobileDeviceBranding', 'devicemobileDeviceInfo', 'devicemobileDeviceMarketingName',
                'devicemobileDeviceModel',
                'devicemobileInputSelector', 'deviceoperatingSystemVersion', 'devicescreenColors',
@@ -74,12 +74,12 @@ def drop_features(df):
                'geoNetworkcityId', 'geoNetworklatitude', 'geoNetworklongitude', 'geoNetworknetworkLocation',
                'trafficSourceadwordsClickInfocriteriaParameters', 'trafficSourceadwordsClickInfogclId',
                'trafficSourcecampaign',
-               'trafficSourceadwordsClickInfopage', 'trafficSourcereferralPath',
+               'trafficSourceadwordsClickInfopage',
                'trafficSourceadwordsClickInfoslot',
-               'trafficSourceadContent', 'trafficSourcekeyword', 'trafficSourceadwordsClickInfoadNetworkType',
+               'trafficSourceadContent', 'trafficSourceadwordsClickInfoadNetworkType',
                'totalsbounces', 'totalsnewVisits', 'totalsvisits',
                'trafficSourceisTrueDirect',
-               'trafficSourceadwordsClickInfoisVideoAd', 'totalsvisits']
+               'trafficSourceadwordsClickInfoisVideoAd']
     df.drop(to_drop, axis=1, errors='ignore', inplace=True)
     if 'trafficSourcecampaignCode' in df.columns:
         df.drop(['trafficSourcecampaignCode'], axis=1, errors='ignore', inplace=True)
@@ -91,6 +91,11 @@ def change_feature_type_and_fill_na(df):
         df.loc[df['geoNetworkcity'] == '(not set)', 'geoNetworkcity'] = np.nan
         df.loc[df['geoNetworkcity'] == 'not available in demo dataset', 'geoNetworkcity'] = np.nan
         df['geoNetworkcity'].fillna('NaN', inplace=True)
+
+    if 'geoNetworknetworkDomain' in df.columns:
+        df.loc[df['geoNetworknetworkDomain'] == '(not set)', 'geoNetworknetworkDomain'] = np.nan
+        df.loc[df['geoNetworknetworkDomain'] == 'not available in demo dataset', 'geoNetworknetworkDomain'] = np.nan
+        df['geoNetworknetworkDomain'].fillna('NaN', inplace=True)
 
     if 'geoNetworkmetro' in df.columns:
         df.loc[df['geoNetworkmetro'] == '(not set)', 'geoNetworkmetro'] = np.nan
@@ -105,6 +110,11 @@ def change_feature_type_and_fill_na(df):
         df.loc[df['geoNetworkregion'] == 'not available in demo dataset', 'geoNetworkregion'] = np.nan
         df['geoNetworkregion'].fillna('NaN', inplace=True)
 
+    if 'trafficSourcekeyword' in df.columns:
+        df.loc[df['trafficSourcekeyword'] == '(not provided)', 'trafficSourcekeyword'] = np.nan
+        df.loc[df['trafficSourcekeyword'] == '(not set)', 'trafficSourcekeyword'] = np.nan
+        df['trafficSourcekeyword'].fillna('NaN', inplace=True)
+
     if 'totalshits' in df.columns:
         df['totalshits'] = df['totalshits'].astype(int)  # setting numerical to int
 
@@ -114,6 +124,8 @@ def change_feature_type_and_fill_na(df):
 
     if 'totalstransactionRevenue' in df.columns:
         df['totalstransactionRevenue'] = df['totalstransactionRevenue'].fillna(0.0).astype(float)
+
+
 
     return df
 

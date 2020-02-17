@@ -21,10 +21,7 @@ import squarify  # to better understand proportion of categorys - it's a treemap
 from plotly.offline import init_notebook_mode, iplot, plot
 import plotly.graph_objs as go
 
-from plotly import tools
-from plotly import subplots
-import plotly.offline as py
-import plotly.graph_objs as go
+
 
 import json  # to convert json in df
 from pandas import json_normalize  # to normalize the json file
@@ -86,14 +83,15 @@ def revenue_customers(train_df, test_df):
 
 
 def category_to_number(train, test):
-    cat_cols = ['channelGrouping', 'devicebrowser',
-                'devicedeviceCategory', 'deviceoperatingSystem',
+    cat_cols = ['channelGrouping',
+                'deviceoperatingSystem',
                 'geoNetworkcity', 'geoNetworkcontinent',
                 'geoNetworkcountry', 'geoNetworkmetro',
                 'geoNetworknetworkDomain', 'geoNetworkregion',
-                'geoNetworksubContinent',
-                'trafficSourcemedium',
-                'trafficSourcesource']
+                'geoNetworknetworkDomain',
+                'trafficSourcemedium', 'trafficSourcekeyword',
+                'trafficSourcesource', 'trafficSourcereferralPath',
+                'devicebrowser', 'geoNetworksubContinent', 'devicedeviceCategory']
 
     for col in cat_cols:
         lbl = preprocessing.LabelEncoder()
@@ -102,6 +100,7 @@ def category_to_number(train, test):
         test[col] = lbl.transform(list(test[col].values.astype('str')))
 
     return train, test
+
 
 def separate_data(train, test):
     features = list(train.columns.values.tolist())
@@ -156,29 +155,29 @@ def run_lgb(train_X, train_y, val_X, val_y, test_X):
     return pred_test_y, model, pred_val_y
 
 
-# def run_NN(train_X, train_y, val_X, val_y, test_X):
-#     # train_X = K.cast_to_floatx(train_X)
-#     # train_y = K.cast_to_floatx(train_y)
-#     # val_X = K.cast_to_floatx(val_X)
-#     # val_y = K.cast_to_floatx(val_y)
-#
-#     # Neural network
-#     # model = Sequential()
-#     # model.add(Dense(30, input_dim=len(train_X[0]), activation='relu'))
-#     # model.add(Dense(40, activation='relu'))
-#     # model.add(Dense(12, activation='relu'))
-#     # model.add(Dense(1, activation='linear'))
-#
-#     model = keras.Sequential([
-#         layers.Dense(30, activation='relu', input_shape=[len(train_X[0])]),
-#         layers.Dense(25, activation='relu'),
-#         layers.Dense(1)
-#     ])
-#
-#     model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
-#     hist = model.fit(train_X, train_y, batch_size=30, epochs=15, validation_data=(val_X, val_y))
-#     pred_test = model.predict([test_X], batch_size=30, verbose=1)
-#     return pred_test
+def run_NN(train_X, train_y, val_X, val_y, test_X):
+    # train_X = K.cast_to_floatx(train_X)
+    # train_y = K.cast_to_floatx(train_y)
+    # val_X = K.cast_to_floatx(val_X)
+    # val_y = K.cast_to_floatx(val_y)
+
+    # Neural network
+    # model = Sequential()
+    # model.add(Dense(30, input_dim=len(train_X[0]), activation='relu'))
+    # model.add(Dense(40, activation='relu'))
+    # model.add(Dense(12, activation='relu'))
+    # model.add(Dense(1, activation='linear'))
+
+    model = keras.Sequential([
+        layers.Dense(30, activation='relu', input_shape=[len(train_X[0])]),
+        layers.Dense(25, activation='relu'),
+        layers.Dense(1)
+    ])
+
+    model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
+    hist = model.fit(train_X, train_y, batch_size=30, epochs=15, validation_data=(val_X, val_y))
+    pred_test = model.predict([test_X], batch_size=30, verbose=1)
+    return pred_test
 
 
 def validate(val_df, pred_val):
@@ -188,6 +187,7 @@ def validate(val_df, pred_val):
     val_pred_df = val_pred_df.groupby('fullVisitorId')[['transactionRevenue', 'PredictedRevenue']].sum().reset_index()
     print(np.sqrt(metrics.mean_squared_error(np.log1p(val_pred_df['transactionRevenue'].values),
                                              np.log1p(val_pred_df['PredictedRevenue'].values))))
+
 
 def show_feature_importance(model):
     fig, ax = plt.subplots(figsize=(12, 18))
@@ -241,9 +241,10 @@ if __name__ == '__main__':
         validate(val_df, pred_val)
         # feature importance
         show_feature_importance(model)
-    # elif mod == 'NN':
-    #     pred_test = run_NN(train_X, train_y, val_X, val_y, test_X)
-    #     print('NN done')
+    elif mod == 'NN':
+        # notes: visitID,
+        pred_test = run_NN(train_X, train_y, val_X, val_y, test_X)
+        print('NN done')
     elif mod == 'XGBOOST':
         pred_test, model, pred_val = run_xgb(train_X, train_y, val_X, val_y, test_X)
         validate(val_df, pred_val)
