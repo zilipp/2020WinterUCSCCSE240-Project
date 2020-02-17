@@ -123,7 +123,49 @@ def separate_data(train, test):
     val_X = val_df[features]
     test_X = test[features]
 
+    print('==========final data==========')
+    print('train_X shape ' + str(dev_X.shape))
+    print('train_y shape ' + str(dev_y.shape))
+    print('val_X shape ' + str(val_X.shape))
+    print('val_y shape ' + str(val_y.shape))
+    print('test_X shape ' + str(test_X.shape))
+
     return dev_X, dev_y, val_X, val_y, test_X, dev_df, val_df
+
+
+def validate(val_df, pred_val):
+    val_pred_df = pd.DataFrame({"fullVisitorId": val_df["fullVisitorId"].values})
+    val_pred_df["transactionRevenue"] = val_df["totalstransactionRevenue"].values
+    val_pred_df["PredictedRevenue"] = np.expm1(pred_val)
+    val_pred_df = val_pred_df.groupby('fullVisitorId')[['transactionRevenue', 'PredictedRevenue']].sum().reset_index()
+    print(np.sqrt(metrics.mean_squared_error(np.log1p(val_pred_df['transactionRevenue'].values),
+                                             np.log1p(val_pred_df['PredictedRevenue'].values))))
+
+
+def show_feature_importance(model):
+    fig, ax = plt.subplots(figsize=(12, 18))
+    lgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
+    ax.grid(False)
+    plt.title("LightGBM - Feature Importance", fontsize=15)
+    plt.show()
+
+
+# ===================== models ============================
+
+def run_xgb(train_X, train_y, val_X, val_y, test_X):
+
+    # fit model no training data
+    model = XGBClassifier()
+    model.fit(train_X, train_y)
+
+    y_pred_val = model.predict(val_X)
+    y_pred_val = [round(value) for value in y_pred_val]
+    y_pred_val = [0 if i < 0 else i for i in y_pred_val]
+
+    y_pred_test = model.predict(test_X)
+    y_pred_test = [round(value) for value in y_pred_test]
+    y_pred_test = [0 if i < 0 else i for i in y_pred_test]
+    return y_pred_test, model, y_pred_val
 
 
 def run_lgb(train_X, train_y, val_X, val_y, test_X):
@@ -155,6 +197,12 @@ def run_lgb(train_X, train_y, val_X, val_y, test_X):
     return pred_test_y, model, pred_val_y
 
 
+# =================== deep learning =======================
+
+
+
+
+
 def run_NN(train_X, train_y, val_X, val_y, test_X):
     # train_X = K.cast_to_floatx(train_X)
     # train_y = K.cast_to_floatx(train_y)
@@ -168,87 +216,51 @@ def run_NN(train_X, train_y, val_X, val_y, test_X):
     # model.add(Dense(12, activation='relu'))
     # model.add(Dense(1, activation='linear'))
 
-    model = keras.Sequential([
-        layers.Dense(30, activation='relu', input_shape=[len(train_X[0])]),
-        layers.Dense(25, activation='relu'),
-        layers.Dense(1)
-    ])
+    # model = keras.Sequential([
+    #     layers.Dense(30, activation='relu', input_shape=[len(train_X[0])]),
+    #     layers.Dense(25, activation='relu'),
+    #     layers.Dense(1)
+    # ])
+    #
+    # model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
+    # hist = model.fit(train_X, train_y, batch_size=30, epochs=15, validation_data=(val_X, val_y))
+    # pred_test = model.predict([test_X], batch_size=30, verbose=1)
 
-    model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
-    hist = model.fit(train_X, train_y, batch_size=30, epochs=15, validation_data=(val_X, val_y))
-    pred_test = model.predict([test_X], batch_size=30, verbose=1)
     return pred_test
-
-
-def validate(val_df, pred_val):
-    val_pred_df = pd.DataFrame({"fullVisitorId": val_df["fullVisitorId"].values})
-    val_pred_df["transactionRevenue"] = val_df["totalstransactionRevenue"].values
-    val_pred_df["PredictedRevenue"] = np.expm1(pred_val)
-    val_pred_df = val_pred_df.groupby('fullVisitorId')[['transactionRevenue', 'PredictedRevenue']].sum().reset_index()
-    print(np.sqrt(metrics.mean_squared_error(np.log1p(val_pred_df['transactionRevenue'].values),
-                                             np.log1p(val_pred_df['PredictedRevenue'].values))))
-
-
-def show_feature_importance(model):
-    fig, ax = plt.subplots(figsize=(12, 18))
-    lgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
-    ax.grid(False)
-    plt.title("LightGBM - Feature Importance", fontsize=15)
-    plt.show()
-
-
-def run_xgb(train_X, train_y, val_X, val_y, test_X):
-
-    # fit model no training data
-    model = XGBClassifier()
-    model.fit(train_X, train_y)
-
-    y_pred_val = model.predict(val_X)
-    y_pred_val = [round(value) for value in y_pred_val]
-    y_pred_val = [0 if i < 0 else i for i in y_pred_val]
-
-    y_pred_test = model.predict(test_X)
-    y_pred_test = [round(value) for value in y_pred_test]
-    y_pred_test = [0 if i < 0 else i for i in y_pred_test]
-    return y_pred_test, model, y_pred_val
 
 
 if __name__ == '__main__':
     # 1. load data to df, after parsing jason
     df_train = pd.read_csv("../data/train_concise.csv")
     df_test = pd.read_csv("../data/test_concise.csv")
-    df_train, df_test = category_to_number(df_train, df_test)
+
     print(df_train.info())
     print(df_test.info())
 
     # group data frame by fullVisitorId
     # gdf = revenue_customers(df_train, df_test)
 
-
     # separate labels and split data
-    train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
-    print('==========final data==========')
-    print(train_X.shape)
-    print(train_y.shape)
-    print(val_X.shape)
-    print(val_y.shape)
-    print(test_X.shape)
+
 
     # build and train model
     if mod == 'LGBM':
+        df_train, df_test = category_to_number(df_train, df_test)
+        train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
         pred_test, model, pred_val = run_lgb(train_X, train_y, val_X, val_y, test_X)
         # validate the model
         validate(val_df, pred_val)
         # feature importance
         show_feature_importance(model)
-    elif mod == 'NN':
-        # notes: visitID,
-        pred_test = run_NN(train_X, train_y, val_X, val_y, test_X)
-        print('NN done')
+        print('LGBM done')
     elif mod == 'XGBOOST':
+        df_train, df_test = category_to_number(df_train, df_test)
+        train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
         pred_test, model, pred_val = run_xgb(train_X, train_y, val_X, val_y, test_X)
         validate(val_df, pred_val)
         print('XGBOOST done')
+    elif mod == "NN":
+        pass
 
 
 

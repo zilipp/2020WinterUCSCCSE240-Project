@@ -6,7 +6,7 @@ import random
 import matplotlib.pyplot as plt
 
 DATA_PATH = '../data/'
-PROCESS_DATA_PERCENT = 1  # fractional number to skip rows and read just a random sample of the our dataset.
+PROCESS_DATA_PERCENT = 0.01  # fractional number to skip rows and read just a random sample of the our dataset.
 JSON_COLS = ['device', 'geoNetwork', 'totals', 'trafficSource']  # Columns that have json format
 
 
@@ -145,11 +145,11 @@ if __name__ == '__main__':
     data_train_raw = json_read('train.csv')
     processed_train_data = process_data(data_train_raw)
     print(processed_train_data.info())
-    processed_train_data.to_csv('../data/train_peng.csv', index=False)
+    processed_train_data.to_csv('../data/train_concise.csv', index=False)
     del data_train_raw, processed_train_data
 
     data_test_raw = json_read('test.csv')
     processed_test_data = process_data(data_test_raw)
     print(processed_test_data.info())
-    processed_test_data.to_csv('../data/test_peng.csv', index=False)
+    processed_test_data.to_csv('../data/test_concise.csv', index=False)
     del data_test_raw, processed_test_data
