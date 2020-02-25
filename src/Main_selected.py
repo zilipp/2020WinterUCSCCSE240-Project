@@ -20,9 +20,6 @@ import squarify  # to better understand proportion of categorys - it's a treemap
 # Importing librarys to use on interactive graphs
 from plotly.offline import init_notebook_mode, iplot, plot
 import plotly.graph_objs as go
-
-
-
 import json  # to convert json in df
 from pandas import json_normalize  # to normalize the json file
 
@@ -63,7 +60,6 @@ cat_cols = ['channelGrouping',
                 'geoNetworkcity', 'geoNetworkcontinent',
                 'geoNetworkcountry', 'geoNetworkmetro',
                 'geoNetworknetworkDomain', 'geoNetworkregion',
-                'geoNetworknetworkDomain',
                 'trafficSourcemedium', 'trafficSourcekeyword',
                 'trafficSourcesource', 'trafficSourcereferralPath',
                 'devicebrowser', 'geoNetworksubContinent', 'devicedeviceCategory']
@@ -119,6 +115,21 @@ def separate_data(train, test):
     features.remove("totalstransactionRevenue")
     features.remove("fullVisitorId")
     features.remove("date")
+    # =================selected================
+    features.remove("trafficSourcekeyword")
+    features.remove("geoNetworknetworkDomain")
+    features.remove("trafficSourcereferralPath")
+    features.remove("devicebrowser")
+    features.remove("trafficSourcemedium")
+    features.remove("geoNetworkregion")
+    features.remove("channelGrouping")
+    features.remove("geoNetworksubContinent")
+    features.remove("geoNetworkcontinent")
+    features.remove("devicedeviceCategory")
+    features.remove("geoNetworkcity")
+    features.remove("deviceoperatingSystem")
+    features.remove("deviceisMobile")
+    # =================selected================
 
     # Split the train dataset into development and valid based on time
     train['date'] = train['date'].apply(
@@ -207,7 +218,7 @@ def run_lgb(train_X, train_y, val_X, val_y, test_X):
     lgtrain = lgb.Dataset(train_X, label=train_y)
     lgval = lgb.Dataset(val_X, label=val_y)
 
-    model = lgb.train(params, lgtrain, 1000, valid_sets=[lgval], early_stopping_rounds=100, verbose_eval=100)
+    model = lgb.train(params, lgtrain, 400, valid_sets=[lgval], early_stopping_rounds=100, verbose_eval=100)
 
     pred_test_y = model.predict(test_X, num_iteration=model.best_iteration)
     pred_test_y[pred_test_y < 0] = 0
@@ -226,7 +237,18 @@ def run_cb(train_X, train_y, val_X, val_y, test_X):
     #        'trafficSourcesource', 'trafficSourcemedium',
     #        'trafficSourcereferralPath', 'trafficSourcekeyword'],
     #       dtype='object')
-    categorical_features_indices = [0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19]
+
+    # selected
+    # Index(['visitNumber', 'visitStartTime', 'geoNetworkcountry', 'geoNetworkmetro',
+    #        'totalshits', 'totalspageviews', 'trafficSourcesource'],
+    #       dtype='object')
+
+
+    # categorical_features_indices = [0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19]
+    # selected
+    categorical_features_indices = [2, 3, 6]
+
+
     model = CatBoostRegressor(iterations=1000,
                               learning_rate=0.05,
                               depth=10,
