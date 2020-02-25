@@ -30,6 +30,7 @@ from pandas import json_normalize  # to normalize the json file
 from sklearn import model_selection, preprocessing, metrics
 import lightgbm as lgb
 
+
 from tensorflow import keras
 from tensorflow.keras import layers
 from keras.models import Sequential
@@ -38,8 +39,10 @@ import keras.backend as K
 
 from numpy import loadtxt
 from xgboost import XGBClassifier
+from catboost import CatBoostRegressor, Pool, cv
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import mean_squared_error
 
 # sel defined class
 from src.visualization import Visualization
@@ -53,8 +56,17 @@ from src.visualization import Visualization
 
 dir_path = "../data/"
 p = 0.001  # fractional number to skip rows and read just a random sample of the our dataset.
-mod = 'LGBM'#'LGBM' # RNN / XGBOOST
+mod = 'LGBOOST' #'LGBOOST' # RNN / XGBOOST /'CBOOST'
 plt.style.use('fivethirtyeight')  # to set a style to all graphs
+cat_cols = ['channelGrouping',
+                'deviceoperatingSystem',
+                'geoNetworkcity', 'geoNetworkcontinent',
+                'geoNetworkcountry', 'geoNetworkmetro',
+                'geoNetworknetworkDomain', 'geoNetworkregion',
+                'geoNetworknetworkDomain',
+                'trafficSourcemedium', 'trafficSourcekeyword',
+                'trafficSourcesource', 'trafficSourcereferralPath',
+                'devicebrowser', 'geoNetworksubContinent', 'devicedeviceCategory']
 
 
 def revenue_customers(train_df, test_df):
@@ -83,15 +95,15 @@ def revenue_customers(train_df, test_df):
 
 
 def category_to_number(train, test):
-    cat_cols = ['channelGrouping',
-                'deviceoperatingSystem',
-                'geoNetworkcity', 'geoNetworkcontinent',
-                'geoNetworkcountry', 'geoNetworkmetro',
-                'geoNetworknetworkDomain', 'geoNetworkregion',
-                'geoNetworknetworkDomain',
-                'trafficSourcemedium', 'trafficSourcekeyword',
-                'trafficSourcesource', 'trafficSourcereferralPath',
-                'devicebrowser', 'geoNetworksubContinent', 'devicedeviceCategory']
+    # cat_cols = ['channelGrouping',
+    #             'deviceoperatingSystem',
+    #             'geoNetworkcity', 'geoNetworkcontinent',
+    #             'geoNetworkcountry', 'geoNetworkmetro',
+    #             'geoNetworknetworkDomain', 'geoNetworkregion',
+    #             'geoNetworknetworkDomain',
+    #             'trafficSourcemedium', 'trafficSourcekeyword',
+    #             'trafficSourcesource', 'trafficSourcereferralPath',
+    #             'devicebrowser', 'geoNetworksubContinent', 'devicedeviceCategory']
 
     for col in cat_cols:
         lbl = preprocessing.LabelEncoder()
@@ -149,6 +161,14 @@ def show_feature_importance(model):
     plt.title("LightGBM - Feature Importance", fontsize=15)
     plt.show()
 
+def cboost_feature_importance(model):
+    fig, ax = plt.subplots(figsize=(12, 18))
+    lgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
+    ax.grid(False)
+    plt.title("LightGBM - Feature Importance", fontsize=15)
+    plt.show()
+
+
 
 # ===================== models ============================
 
@@ -197,12 +217,61 @@ def run_lgb(train_X, train_y, val_X, val_y, test_X):
     return pred_test_y, model, pred_val_y
 
 
+def run_cb(train_X, train_y, val_X, val_y, test_X):
+    # Index(['channelGrouping', 'visitNumber', 'visitStartTime', 'devicebrowser',
+    #        'deviceoperatingSystem', 'deviceisMobile', 'devicedeviceCategory',
+    #        'geoNetworkcontinent', 'geoNetworksubContinent', 'geoNetworkcountry',
+    #        'geoNetworkregion', 'geoNetworkmetro', 'geoNetworkcity',
+    #        'geoNetworknetworkDomain', 'totalshits', 'totalspageviews',
+    #        'trafficSourcesource', 'trafficSourcemedium',
+    #        'trafficSourcereferralPath', 'trafficSourcekeyword'],
+    #       dtype='object')
+    categorical_features_indices = [0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19]
+    model = CatBoostRegressor(iterations=1000,
+                              learning_rate=0.05,
+                              depth=10,
+                              eval_metric='RMSE',
+                              random_seed=42,
+                              bagging_temperature=0.2,
+                              od_type='Iter',
+                              metric_period=50,
+                              od_wait=20)
+    model.fit(train_X, train_y,
+              cat_features=categorical_features_indices,
+              eval_set=(val_X, val_y),
+              use_best_model=True,
+              verbose=True)
+
+    pred_test_y = model.predict(test_X)
+    pred_val_y = model.predict(val_X)
+    pred_val_y[pred_val_y < 0] = 0
+
+    feature_score = pd.DataFrame(list(
+        zip(train_X.dtypes.index, model.get_feature_importance(Pool(train_X, label=train_y, cat_features=categorical_features_indices)))),
+                                 columns=['Feature', 'Score'])
+
+    feature_score = feature_score.sort_values(by='Score', ascending=False, inplace=False, kind='quicksort',
+                                              na_position='last')
+
+    plt.rcParams["figure.figsize"] = (12, 7)
+    ax = feature_score.plot('Feature', 'Score', kind='bar', color='c')
+    ax.set_title("Catboost Feature Importance Ranking", fontsize=14)
+    ax.set_xlabel('')
+
+    rects = ax.patches
+
+    labels = feature_score['Score'].round(2)
+
+    for rect, label in zip(rects, labels):
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width() / 2, height + 0.35, label, ha='center', va='bottom')
+
+    plt.show()
+
+    return pred_test_y, model, pred_val_y
+
+
 # =================== deep learning =======================
-
-
-
-
-
 def run_NN(train_X, train_y, val_X, val_y, test_X):
     # train_X = K.cast_to_floatx(train_X)
     # train_y = K.cast_to_floatx(train_y)
@@ -231,36 +300,33 @@ def run_NN(train_X, train_y, val_X, val_y, test_X):
 
 if __name__ == '__main__':
     # 1. load data to df, after parsing jason
-    df_train = pd.read_csv("../data/train_concise.csv")
-    df_test = pd.read_csv("../data/test_concise.csv")
-
+    df_train = pd.read_csv("../data/train_full.csv", low_memory=False)
+    df_test = pd.read_csv("../data/test_full.csv", low_memory=False)
     print(df_train.info())
     print(df_test.info())
 
-    # group data frame by fullVisitorId
-    # gdf = revenue_customers(df_train, df_test)
-
     # separate labels and split data
+    df_train, df_test = category_to_number(df_train, df_test)
+    train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
+    print(train_X.columns)
 
 
     # build and train model
-    if mod == 'LGBM':
-        df_train, df_test = category_to_number(df_train, df_test)
-        train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
+    if mod == 'LGBOOST':
         pred_test, model, pred_val = run_lgb(train_X, train_y, val_X, val_y, test_X)
-        # validate the model
         validate(val_df, pred_val)
-        # feature importance
         show_feature_importance(model)
         print('LGBM done')
     elif mod == 'XGBOOST':
-        df_train, df_test = category_to_number(df_train, df_test)
-        train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
         pred_test, model, pred_val = run_xgb(train_X, train_y, val_X, val_y, test_X)
         validate(val_df, pred_val)
         print('XGBOOST done')
-    elif mod == "NN":
-        pass
+    elif mod == 'CBOOST':
+        pred_test, model, pred_val = run_cb(train_X, train_y, val_X, val_y, test_X)
+        validate(val_df, pred_val)
+        print('CBOOST done')
+
+
 
 
 
