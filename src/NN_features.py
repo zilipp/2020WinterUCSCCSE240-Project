@@ -1,13 +1,17 @@
-import os
 import pandas as pd
 import numpy as np
 import datetime
-import setuptools
-import time
 from tensorflow import keras
 from sklearn.preprocessing import LabelEncoder
-from sklearn import model_selection, preprocessing, metrics
+from sklearn import metrics
 
+# credit to:
+# parse JSON:
+# https://www.kaggle.com/julian3833/1-quick-start-read-csv-and-flatten-json-fields/notebook
+# baseline model : lgbm
+# https://www.kaggle.com/zili100097/simple-exploration-baseline-ga-customer-revenue/edit
+# missing value and unique value processing:
+# https://www.kaggle.com/kabure/exploring-the-consumer-patterns-ml-pipeline
 
 df_train = pd.read_csv("../data/train_concise.csv")
 print(df_train.info())
@@ -88,9 +92,8 @@ def get_keras_data(df, num_cols, cat_cols):
     print("Data ready for Vectorization")
     return X
 
+
 inp_dim = train_X.shape[1]
-# train_X = get_keras_data(train_X, num_cols, cat_cols)
-# val_X = get_keras_data(val_X, num_cols, cat_cols)
 train_X = np.array(train_X)
 train_y = np.array(train_y)
 
@@ -98,16 +101,11 @@ model = keras.models.Sequential()
 model.add(keras.layers.Dense(50, input_dim=inp_dim, activation='relu'))
 model.add(keras.layers.Dense(units=50, activation='relu'))
 model.add(keras.layers.Dense(units=20, activation='relu'))
-# model.add(keras.layers.GlobalMaxPool1D())
 model.add(keras.layers.Dense(1, activation='relu'))
-
-# model.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.BinaryCrossentropy(), metrics=[keras.metrics.BinaryAccuracy()])
 
 model.compile(loss='mean_squared_error', optimizer='sgd', metrics=['accuracy'])
 
 hist = model.fit(train_X, train_y, batch_size=100, epochs=10, validation_data=(val_X, val_y))
-
-
 pred_y = model.predict(val_X, batch_size=100, verbose=1)
 
 

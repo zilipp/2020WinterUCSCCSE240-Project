@@ -142,3 +142,4 @@ graphs/
 
 # mac
 .DS_Store
+/src/catboost_info/

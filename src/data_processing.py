@@ -5,6 +5,14 @@ from pandas import json_normalize  # to normalize the json file
 import random
 import matplotlib.pyplot as plt
 
+# credit to:
+# parse JSON:
+# https://www.kaggle.com/julian3833/1-quick-start-read-csv-and-flatten-json-fields/notebook
+# baseline model : lgbm
+# https://www.kaggle.com/zili100097/simple-exploration-baseline-ga-customer-revenue/edit
+# missing value and unique value processing:
+# https://www.kaggle.com/kabure/exploring-the-consumer-patterns-ml-pipeline
+
 DATA_PATH = '../data/'
 PROCESS_DATA_PERCENT = 1  # fractional number to skip rows and read just a random sample of the our dataset.
 JSON_COLS = ['device', 'geoNetwork', 'totals', 'trafficSource']  # Columns that have json format
@@ -55,7 +63,6 @@ def missing_value_info(data):
     plt.bar(ind, percent_list, width=0.3)
     plt.xticks(ind, percent_label_list, rotation=90)
     plt.show()
-
     return columns
 
 
@@ -124,9 +131,6 @@ def change_feature_type_and_fill_na(df):
 
     if 'totalstransactionRevenue' in df.columns:
         df['totalstransactionRevenue'] = df['totalstransactionRevenue'].fillna(0.0).astype(float)
-
-
-
     return df
 
 

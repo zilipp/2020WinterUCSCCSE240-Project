@@ -1,72 +1,38 @@
-import os
-import random
-
-# import keras
 import pandas as pd
 import numpy as np
 import datetime
-import setuptools
-import time
-
-# from keras.wrappers.scikit_learn import KerasRegressor
-from scipy.stats import kurtosis, skew  # it's to explore some statistics of numerical value
 
 import matplotlib.pyplot as plt  # to graphics plot
 import seaborn as sns  # a good library to graphic plots
-
 color = sns.color_palette()
-import squarify  # to better understand proportion of categorys - it's a treemap layout algorithm
-
-# Importing librarys to use on interactive graphs
-from plotly.offline import init_notebook_mode, iplot, plot
-import plotly.graph_objs as go
-
-
-
-import json  # to convert json in df
-from pandas import json_normalize  # to normalize the json file
 
 # machine learning models
 from sklearn import model_selection, preprocessing, metrics
 import lightgbm as lgb
-
-#
-# from tensorflow import keras
-# from tensorflow.keras import layers
-# from keras.models import Sequential
-# from keras.layers import Dense, Activation, Dropout
-# import keras.backend as K
-
-from numpy import loadtxt
-from xgboost import XGBClassifier
+import xgboost as xgb
 from catboost import CatBoostRegressor, Pool, cv
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import mean_squared_error
 
-# sel defined class
-from src.visualization import Visualization
 
 # credit to:
 # parse JSON:
 # https://www.kaggle.com/julian3833/1-quick-start-read-csv-and-flatten-json-fields/notebook
 # baseline model : lgbm
 # https://www.kaggle.com/zili100097/simple-exploration-baseline-ga-customer-revenue/edit
+# missing value and unique value processing:
+# https://www.kaggle.com/kabure/exploring-the-consumer-patterns-ml-pipeline
 
 
 dir_path = "../data/"
-p = 0.001  # fractional number to skip rows and read just a random sample of the our dataset.
-mod = 'CBOOST' #'LGBOOST' # RNN / XGBOOST /'CBOOST'
 plt.style.use('fivethirtyeight')  # to set a style to all graphs
 cat_cols = ['channelGrouping',
-                'deviceoperatingSystem',
-                'geoNetworkcity', 'geoNetworkcontinent',
-                'geoNetworkcountry', 'geoNetworkmetro',
-                'geoNetworknetworkDomain', 'geoNetworkregion',
-                'geoNetworknetworkDomain',
-                'trafficSourcemedium', 'trafficSourcekeyword',
-                'trafficSourcesource', 'trafficSourcereferralPath',
-                'devicebrowser', 'geoNetworksubContinent', 'devicedeviceCategory']
+            'deviceoperatingSystem',
+            'geoNetworkcity', 'geoNetworkcontinent',
+            'geoNetworkcountry', 'geoNetworkmetro',
+            'geoNetworknetworkDomain', 'geoNetworkregion',
+            'geoNetworknetworkDomain',
+            'trafficSourcemedium', 'trafficSourcekeyword',
+            'trafficSourcesource', 'trafficSourcereferralPath',
+            'devicebrowser', 'geoNetworksubContinent', 'devicedeviceCategory']
 
 
 def revenue_customers(train_df, test_df):
@@ -78,19 +44,6 @@ def revenue_customers(train_df, test_df):
     plt.xlabel('index', fontsize=12)
     plt.ylabel('TransactionRevenue', fontsize=12)
     # plt.show()
-
-    nzi = pd.notnull(train_df["totalstransactionRevenue"]).sum()
-    nzr = (gdf["totalstransactionRevenue"] > 0).sum()
-    # print("Number of instances in train set with non-zero revenue : ", nzi, " and ratio is : ", nzi / train_df.shape[0])
-    # print("Number of unique customers with non-zero revenue : ", nzr, "and the ratio is : ", nzr / gdf.shape[0])
-    #
-    # print("Number of unique visitors in train set : ", train_df.fullVisitorId.nunique(), " out of rows : ",
-    #       train_df.shape[0])
-    # print("Number of unique visitors in test set : ", test_df.fullVisitorId.nunique(), " out of rows : ",
-    #       test_df.shape[0])
-    # print("Number of common visitors in train and test set : ",
-    #       len(set(train_df.fullVisitorId.unique()).intersection(set(test_df.fullVisitorId.unique()))))
-
     return gdf
 
 
@@ -161,6 +114,7 @@ def show_feature_importance(model):
     plt.title("LightGBM - Feature Importance", fontsize=15)
     plt.show()
 
+
 def cboost_feature_importance(model):
     fig, ax = plt.subplots(figsize=(12, 18))
     lgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
@@ -169,23 +123,34 @@ def cboost_feature_importance(model):
     plt.show()
 
 
-
 # ===================== models ============================
-
 def run_xgb(train_X, train_y, val_X, val_y, test_X):
+    params = {'objective': 'reg:linear',
+              'eval_metric': 'rmse',
+              'eta': 0.001,
+              'max_depth': 10,
+              'subsample': 0.6,
+              'colsample_bytree': 0.6,
+              'alpha': 0.001,
+              'random_state': 42,
+              'silent': True}
 
-    # fit model no training data
-    model = XGBClassifier()
-    model.fit(train_X, train_y)
+    xgb_train_data = xgb.DMatrix(train_X, train_y)
+    xgb_val_data = xgb.DMatrix(val_X, val_y)
+    xgb_submit_data = xgb.DMatrix(test_X)
 
-    y_pred_val = model.predict(val_X)
-    y_pred_val = [round(value) for value in y_pred_val]
-    y_pred_val = [0 if i < 0 else i for i in y_pred_val]
+    model = xgb.train(params, xgb_train_data,
+                      num_boost_round=2000,
+                      evals=[(xgb_train_data, 'train'), (xgb_val_data, 'valid')],
+                      early_stopping_rounds=100,
+                      verbose_eval=500
+                      )
 
-    y_pred_test = model.predict(test_X)
-    y_pred_test = [round(value) for value in y_pred_test]
-    y_pred_test = [0 if i < 0 else i for i in y_pred_test]
-    return y_pred_test, model, y_pred_val
+    y_pred_train = model.predict(xgb_train_data, ntree_limit=model.best_ntree_limit)
+    y_pred_val = model.predict(xgb_val_data, ntree_limit=model.best_ntree_limit)
+    y_pred_submit = model.predict(xgb_submit_data, ntree_limit=model.best_ntree_limit)
+
+    return y_pred_submit, model, y_pred_val
 
 
 def run_lgb(train_X, train_y, val_X, val_y, test_X):
@@ -271,34 +236,8 @@ def run_cb(train_X, train_y, val_X, val_y, test_X):
     return pred_test_y, model, pred_val_y
 
 
-# =================== deep learning =======================
-def run_NN(train_X, train_y, val_X, val_y, test_X):
-    # train_X = K.cast_to_floatx(train_X)
-    # train_y = K.cast_to_floatx(train_y)
-    # val_X = K.cast_to_floatx(val_X)
-    # val_y = K.cast_to_floatx(val_y)
-
-    # Neural network
-    # model = Sequential()
-    # model.add(Dense(30, input_dim=len(train_X[0]), activation='relu'))
-    # model.add(Dense(40, activation='relu'))
-    # model.add(Dense(12, activation='relu'))
-    # model.add(Dense(1, activation='linear'))
-
-    # model = keras.Sequential([
-    #     layers.Dense(30, activation='relu', input_shape=[len(train_X[0])]),
-    #     layers.Dense(25, activation='relu'),
-    #     layers.Dense(1)
-    # ])
-    #
-    # model.compile(optimizer='sgd', loss='mse', metrics=['accuracy'])
-    # hist = model.fit(train_X, train_y, batch_size=30, epochs=15, validation_data=(val_X, val_y))
-    # pred_test = model.predict([test_X], batch_size=30, verbose=1)
-
-    return pred_test
-
-
 if __name__ == '__main__':
+    mod = 'XGBOOST'  # 'LGBOOST' / 'XGBOOST' /'CBOOST'/ 'ASSEMBLE'
     # 1. load data to df, after parsing jason
     df_train = pd.read_csv("../data/train_full.csv", low_memory=False)
     df_test = pd.read_csv("../data/test_full.csv", low_memory=False)
@@ -309,6 +248,11 @@ if __name__ == '__main__':
     df_train, df_test = category_to_number(df_train, df_test)
     train_X, train_y, val_X, val_y, test_X, dev_df, val_df = separate_data(df_train, df_test)
     print(train_X.columns)
+
+    from datetime import datetime
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    print("Current Time =", current_time)
 
     # build and train model
     if mod == 'LGBOOST':
@@ -324,6 +268,16 @@ if __name__ == '__main__':
         pred_test, model, pred_val = run_cb(train_X, train_y, val_X, val_y, test_X)
         validate(val_df, pred_val)
         print('CBOOST done')
+    elif mod == 'ASSEMBLE':
+        pred_test1, model1, pred_val1 = run_cb(train_X, train_y, val_X, val_y, test_X)
+        pred_test2, model2, pred_val2 = run_lgb(train_X, train_y, val_X, val_y, test_X)
+        pred_val = 0.7 * pred_val1 + 0.3 * pred_val2
+        validate(val_df, pred_val)
+        print('ASSEMBLE done')
+
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    print("Current Time =", current_time)
 
 
 
