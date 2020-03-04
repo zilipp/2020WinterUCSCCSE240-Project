@@ -7,11 +7,10 @@ import seaborn as sns  # a good library to graphic plots
 color = sns.color_palette()
 
 # machine learning models
-from sklearn import model_selection, preprocessing, metrics
+from sklearn import preprocessing, metrics
 import lightgbm as lgb
 import xgboost as xgb
-from catboost import CatBoostRegressor, Pool, cv
-
+from catboost import CatBoostRegressor, Pool
 
 # credit to:
 # parse JSON:
@@ -23,16 +22,16 @@ from catboost import CatBoostRegressor, Pool, cv
 
 
 dir_path = "../data/"
+
 plt.style.use('fivethirtyeight')  # to set a style to all graphs
 cat_cols = ['channelGrouping',
-            'deviceoperatingSystem',
-            'geoNetworkcity', 'geoNetworkcontinent',
-            'geoNetworkcountry', 'geoNetworkmetro',
-            'geoNetworknetworkDomain', 'geoNetworkregion',
-            'geoNetworknetworkDomain',
-            'trafficSourcemedium', 'trafficSourcekeyword',
-            'trafficSourcesource', 'trafficSourcereferralPath',
-            'devicebrowser', 'geoNetworksubContinent', 'devicedeviceCategory']
+                'deviceoperatingSystem',
+                'geoNetworkcity', 'geoNetworkcontinent',
+                'geoNetworkcountry', 'geoNetworkmetro',
+                'geoNetworknetworkDomain', 'geoNetworkregion',
+                'trafficSourcemedium', 'trafficSourcekeyword',
+                'trafficSourcesource', 'trafficSourcereferralPath',
+                'devicebrowser', 'geoNetworksubContinent', 'devicedeviceCategory']
 
 
 def revenue_customers(train_df, test_df):
@@ -72,6 +71,21 @@ def separate_data(train, test):
     features.remove("totalstransactionRevenue")
     features.remove("fullVisitorId")
     features.remove("date")
+    # =================selected================
+    features.remove("trafficSourcekeyword")
+    features.remove("geoNetworknetworkDomain")
+    features.remove("trafficSourcereferralPath")
+    features.remove("devicebrowser")
+    features.remove("trafficSourcemedium")
+    features.remove("geoNetworkregion")
+    features.remove("channelGrouping")
+    features.remove("geoNetworksubContinent")
+    features.remove("geoNetworkcontinent")
+    features.remove("devicedeviceCategory")
+    features.remove("geoNetworkcity")
+    features.remove("deviceoperatingSystem")
+    features.remove("deviceisMobile")
+    # =================selected================
 
     # Split the train dataset into development and valid based on time
     train['date'] = train['date'].apply(
@@ -172,7 +186,7 @@ def run_lgb(train_X, train_y, val_X, val_y, test_X):
     lgtrain = lgb.Dataset(train_X, label=train_y)
     lgval = lgb.Dataset(val_X, label=val_y)
 
-    model = lgb.train(params, lgtrain, 1000, valid_sets=[lgval], early_stopping_rounds=100, verbose_eval=100)
+    model = lgb.train(params, lgtrain, 400, valid_sets=[lgval], early_stopping_rounds=100, verbose_eval=100)
 
     pred_test_y = model.predict(test_X, num_iteration=model.best_iteration)
     pred_test_y[pred_test_y < 0] = 0
@@ -191,7 +205,17 @@ def run_cb(train_X, train_y, val_X, val_y, test_X):
     #        'trafficSourcesource', 'trafficSourcemedium',
     #        'trafficSourcereferralPath', 'trafficSourcekeyword'],
     #       dtype='object')
-    categorical_features_indices = [0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19]
+
+    # selected
+    # Index(['visitNumber', 'visitStartTime', 'geoNetworkcountry', 'geoNetworkmetro',
+    #        'totalshits', 'totalspageviews', 'trafficSourcesource'],
+    #       dtype='object')
+
+
+    # categorical_features_indices = [0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19]
+    # selected
+    categorical_features_indices = [2, 3, 6]
+
     model = CatBoostRegressor(iterations=1000,
                               learning_rate=0.05,
                               depth=10,
@@ -237,7 +261,8 @@ def run_cb(train_X, train_y, val_X, val_y, test_X):
 
 
 if __name__ == '__main__':
-    mod = 'XGBOOST'  # 'LGBOOST' / 'XGBOOST' /'CBOOST'/ 'ASSEMBLE'
+    mod = 'ASSEMBLE'  # 'LGBOOST' / 'XGBOOST' /'CBOOST'/ 'ASSEMBLE'
+
     # 1. load data to df, after parsing jason
     df_train = pd.read_csv("../data/train_full.csv", low_memory=False)
     df_test = pd.read_csv("../data/test_full.csv", low_memory=False)
@@ -271,7 +296,8 @@ if __name__ == '__main__':
     elif mod == 'ASSEMBLE':
         pred_test1, model1, pred_val1 = run_cb(train_X, train_y, val_X, val_y, test_X)
         pred_test2, model2, pred_val2 = run_lgb(train_X, train_y, val_X, val_y, test_X)
-        pred_val = 0.7 * pred_val1 + 0.3 * pred_val2
+        pred_test3, model3, pred_val3 = run_xgb(train_X, train_y, val_X, val_y, test_X)
+        pred_val = 0.6 * pred_val1 + 0.3 * pred_val2 + 0.1 * pred_val3
         validate(val_df, pred_val)
         print('ASSEMBLE done')
 
